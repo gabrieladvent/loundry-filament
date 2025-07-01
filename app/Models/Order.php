@@ -7,14 +7,31 @@ use Illuminate\Database\Eloquent\Model;
 class Order extends Model
 {
     protected $fillable = [
+        'order_code',
         'customer_id',
-        'machine_id',
-        'service_id',
-        'item_id',
-        'discount_id',
-        'payment_id',
-        'total',
+        'user_id',
+        'order_date',
+        'pickup_date',
+        'delivery_date',
+        'estimated_finish',
+        'actual_finish',
         'status',
+        'payment_status',
+        'pickup_type',
+        'delivery_type',
+        'pickup_address',
+        'delivery_address',
+        'total_weight',
+        'total_items',
+        'subtotal',
+        'discount_amount',
+        'tax_amount',
+        'additional_fee',
+        'total_amount',
+        'paid_amount',
+        'change_amount',
+        'payment_id',
+        'notes',
     ];
 
     public function customer()
@@ -46,5 +63,15 @@ class Order extends Model
     public function payment()
     {
         return $this->belongsTo(Payment::class);
+    }
+
+    public function orderDetails()
+    {
+        return $this->hasMany(OrderDetail::class);
+    }
+
+    public function transactionDiscounts()
+    {
+        return $this->hasMany(TransactionDiscount::class);
     }
 }

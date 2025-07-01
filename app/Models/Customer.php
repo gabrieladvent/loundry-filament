@@ -24,4 +24,9 @@ class Customer extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
 }

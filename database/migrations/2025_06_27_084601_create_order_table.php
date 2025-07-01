@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('order_code', 30)->unique();
             $table->foreignId('customer_id')->constrained()->cascadeOnDelete();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('payment_id')->constrained()->cascadeOnDelete()->nullable();
             $table->datetime('order_date');
             $table->datetime('pickup_date')->nullable();
             $table->datetime('delivery_date')->nullable();
@@ -43,8 +44,8 @@ return new class extends Migration
             $table->decimal('tax_amount', 10, 2)->default(0);
             $table->decimal('additional_fee', 10, 2)->default(0);
             $table->decimal('total_amount', 12, 2);
-            $table->decimal('paid_amount', 12, 2)->default(0);
-            $table->decimal('change_amount', 10, 2)->default(0);
+            $table->decimal('paid_amount', 12, 2)->default(0)->nullable();
+            $table->decimal('change_amount', 10, 2)->default(0)->nullable();
             $table->text('notes')->nullable();
             $table->timestamps();
 
@@ -55,6 +56,7 @@ return new class extends Migration
             $table->index(['payment_status']);
             $table->index(['status', 'order_date']);
             $table->index(['customer_id', 'order_date']);
+            $table->index(['payment_id']);
         });
     }
 

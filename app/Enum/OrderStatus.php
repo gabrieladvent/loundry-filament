@@ -47,10 +47,10 @@ enum OrderStatus: string implements HasColor, HasLabel
         return match ($this) {
             self::PENDING => 'warning',
             self::IN_PROGRESS => 'warning',
-            self::WASHING => 'warning',
-            self::DRYING => 'warning',
-            self::IRONING => 'warning',
-            self::READY => 'warning',
+            self::WASHING => 'gray',
+            self::DRYING => 'gray',
+            self::IRONING => 'gray',
+            self::READY => 'info',
             self::DELIVERED => 'success',
             self::CANCELLED => 'danger',
         };

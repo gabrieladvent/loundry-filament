@@ -14,6 +14,7 @@ class OrderHelper
         $totalItems = 0;
         $subtotalAmount = 0;
         $maxDuration = 0;
+        $totalAmount = 0;
 
         if (!is_array($orderDetails) || empty($orderDetails)) {
             $set('total_weight', 0);
@@ -21,6 +22,7 @@ class OrderHelper
             $set('subtotal_amount', 0);
             $set('estimated_finish', null);
             $set('pickup_date', null);
+            $set('total_amount', 0);
             return;
         }
 
@@ -30,6 +32,7 @@ class OrderHelper
 
             if (!empty($detail['price'])) {
                 $subtotalAmount += (float) $detail['price'];
+                $totalAmount += $subtotalAmount;
             }
 
             if (!empty($detail['service_id'])) {
@@ -43,6 +46,7 @@ class OrderHelper
         $set('total_weight', $totalWeight);
         $set('total_items', $totalItems);
         $set('subtotal_amount', $subtotalAmount);
+        $set('total_amount', $totalAmount);
 
         if ($maxDuration > 0) {
             $estimatedDate = now()->addDays($maxDuration);

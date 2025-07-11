@@ -11,4 +11,9 @@ class Payment extends Model
         'notes',
         'is_active',
     ];
+
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
 }

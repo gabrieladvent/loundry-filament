@@ -10,8 +10,9 @@ class OrderDetail extends Model
         'order_id',
         'service_id',
         'quantity',
+        'weight',
         'unit_price',
-        'subtotal',
+        'price',
         'notes',
     ];
 
@@ -23,5 +24,16 @@ class OrderDetail extends Model
     public function service()
     {
         return $this->belongsTo(Service::class);
+    }
+
+    public function getWeightAttribute()
+    {
+        return $this->quantity;
+    }
+
+    // Mutator untuk weight
+    public function setWeightAttribute($value)
+    {
+        $this->attributes['quantity'] = $value;
     }
 }

@@ -85,6 +85,7 @@
                             <th>Jenis</th>
                             <th>Deskripsi</th>
                             <th>Kategori</th>
+                            <th>Metode Pembayaran</th>
                             <th>Referensi</th>
                             <th>Jumlah</th>
                         </tr>
@@ -125,7 +126,10 @@
                                     @endif
                                 </td>
                                 <td class="whitespace-nowrap">
-                                    {{ $item['category'] }}
+                                    {{ \App\Enum\ExpenseType::tryFrom($item['category'])?->getLabel() ?? $item['category'] }}
+                                </td>
+                                <td class="whitespace-nowrap">
+                                    {{ $item['payment_method'] ?? '-' }}
                                 </td>
                                 <td class="whitespace-nowrap">
                                     {{ $item['reference'] ?? '-' }}

@@ -8,6 +8,7 @@ use App\Models\Expense;
 use Filament\Forms\Form;
 use Filament\Pages\Page;
 use Filament\Actions\Action;
+use App\Helpers\PaymentHelper;
 use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Contracts\HasForms;
@@ -35,7 +36,8 @@ class ReportPages extends Page implements HasForms
         $this->form->fill([
             'start_date' => now()->startOfMonth(),
             'end_date' => now(),
-            'report_type' => 'all'
+            'report_type' => 'all',
+            'payment_id' => 'all',
         ]);
 
         $this->generateReport();
@@ -47,7 +49,7 @@ class ReportPages extends Page implements HasForms
             ->schema([
                 Fieldset::make('Filter Laporan')
                     ->schema([
-                        Grid::make(3)->schema([
+                        Grid::make(4)->schema([
                             DatePicker::make('start_date')
                                 ->label('Tanggal Mulai')
                                 ->required()
@@ -73,6 +75,16 @@ class ReportPages extends Page implements HasForms
                                 ->required()
                                 ->live()
                                 ->afterStateUpdated(fn() => $this->generateReport()),
+
+                            Select::make('payment_id')
+                                ->label('Metode Pembayaran')
+                                ->default('all')
+                                ->options(['all' => 'Semua Metode'] + PaymentHelper::getPaymentMethods())
+                                ->nullable()
+                                ->live()
+                                ->afterStateUpdated(fn() => $this->generateReport())
+                                ->searchable(),
+
                         ]),
                     ]),
             ])
@@ -97,13 +109,14 @@ class ReportPages extends Page implements HasForms
         $data = $this->form->getState();
 
         // Validasi data sebelum generate
-        if (!isset($data['start_date']) || !isset($data['end_date']) || !isset($data['report_type'])) {
+        if (!isset($data['start_date']) || !isset($data['end_date']) || !isset($data['report_type']) || !isset($data['payment_id'])) {
             return;
         }
 
         $startDate = Carbon::parse($data['start_date'])->startOfDay();
         $endDate = Carbon::parse($data['end_date'])->endOfDay();
         $reportType = $data['report_type'];
+        $paymentId = $data['payment_id'];
 
         // Validasi tanggal
         if ($startDate > $endDate) {
@@ -128,8 +141,13 @@ class ReportPages extends Page implements HasForms
         if ($reportType === 'all' || $reportType === 'income') {
             $orders = Order::with(['customer', 'payment'])
                 ->whereBetween('created_at', [$startDate, $endDate])
-                ->where('payment_status', 'paid')
-                ->get();
+                ->where('payment_status', 'paid');
+
+            if ($paymentId !== 'all') {
+                $orders->where('payment_id', $paymentId);
+            }
+
+            $orders = $orders->get();
 
             foreach ($orders as $order) {
                 $this->reportData[] = [
@@ -138,6 +156,7 @@ class ReportPages extends Page implements HasForms
                     'description' => 'Order #' . $order->order_code . ' - ' . ($order->customer->name ?? 'Unknown'),
                     'category' => 'Penjualan',
                     'amount' => $order->total_amount,
+                    'payment_method' => $order->payment->payment_name ?? 'Unknown',
                     'reference' => $order->order_code,
                     'details' => [
                         'customer' => $order->customer->name ?? 'Unknown',

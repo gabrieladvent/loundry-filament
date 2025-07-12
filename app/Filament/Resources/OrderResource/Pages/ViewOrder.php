@@ -297,7 +297,7 @@ class ViewOrder extends ViewRecord
                                                         ->formatStateUsing(fn($state) => 'Rp ' . number_format($state, 0, ',', '.'))
                                                         ->icon('heroicon-o-currency-dollar'),
 
-                                                    TextEntry::make('subtotal')
+                                                    TextEntry::make('price')
                                                         ->label('Total')
                                                         ->formatStateUsing(fn($state) => 'Rp ' . number_format($state, 0, ',', '.'))
                                                         ->weight(FontWeight::Bold)
@@ -363,7 +363,7 @@ class ViewOrder extends ViewRecord
                                         ->visible(fn($record) => $record->delivery_type === 'delivery'),
 
                                 ]),
-                            TextEntry::make('catatan_tambahan')
+                            TextEntry::make('notes')
                                 ->label('Catatan Tambahan')
                                 ->icon('heroicon-o-chat-bubble-left-right')
                                 ->placeholder('Tidak ada catatan tambahan'),
@@ -504,7 +504,7 @@ class ViewOrder extends ViewRecord
                                     ->icon('heroicon-o-arrow-path')
                                     ->dateTime('d M Y, H:i')
                                     ->color('gray'),
-                                TextEntry::make('created_by.name')
+                                TextEntry::make('user.name')
                                     ->label('Dibuat Oleh')
                                     ->icon('heroicon-o-user-plus')
                                     ->placeholder('System')

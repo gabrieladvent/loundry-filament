@@ -12,7 +12,7 @@ class PaymentHelper
     /**
      * Convert formatted money string to float
      */
-    private static function toFloat($value): float
+    public static function toFloat($value): float
     {
         if (is_numeric($value)) {
             return (float) $value;
@@ -74,7 +74,12 @@ class PaymentHelper
         $subtotal = self::toFloat($subtotal);
 
         if ($discount->type === 'percentage') {
-            return ($subtotal * $discount->value) / 100;
+            $discountAmount = ($subtotal * $discount->value) / 100;
+            // Apply max discount if set
+            if ($discount->max_discount && $discountAmount > $discount->max_discount) {
+                return $discount->max_discount;
+            }
+            return $discountAmount;
         }
 
         return $discount->value;
@@ -122,6 +127,12 @@ class PaymentHelper
 
         $total = self::calculateTotal($subtotal, $tax, $additionalFee, $discount);
         $set('total_amount', $total);
+
+        // Auto-adjust paid amount if payment status is 'paid'
+        $paymentStatus = $get('payment_status');
+        if ($paymentStatus === 'paid') {
+            $set('paid_amount', $total);
+        }
     }
 
     /**
@@ -151,26 +162,61 @@ class PaymentHelper
      */
     public static function validatePaymentAmount(Get $get): array
     {
-        $rules = [];
+        $rules = ['numeric', 'min:0'];
         $paymentStatus = $get('payment_status');
         $totalAmount = self::toFloat($get('total_amount') ?? 0);
 
         if ($paymentStatus === 'paid') {
             $rules[] = function ($attribute, $value, $fail) use ($totalAmount) {
                 $paidAmount = self::toFloat($value);
-                if ($paidAmount != $totalAmount) {
-                    $fail('Jumlah pembayaran harus sama dengan total amount untuk status "Dibayar"');
+                if (abs($paidAmount - $totalAmount) > 0.01) { // Allow small floating point differences
+                    $fail('Jumlah pembayaran harus sama dengan total pembayaran (Rp ' . number_format($totalAmount, 0, ',', '.') . ') untuk status "Dibayar"');
                 }
             };
         } elseif ($paymentStatus === 'partial') {
             $rules[] = function ($attribute, $value, $fail) use ($totalAmount) {
                 $paidAmount = self::toFloat($value);
+                if ($paidAmount <= 0) {
+                    $fail('Jumlah pembayaran harus lebih dari 0 untuk status "Sebagian Dibayar"');
+                }
                 if ($paidAmount >= $totalAmount) {
-                    $fail('Jumlah pembayaran harus kurang dari total amount untuk status "Sebagian Dibayar"');
+                    $fail('Jumlah pembayaran harus kurang dari total pembayaran (Rp ' . number_format($totalAmount, 0, ',', '.') . ') untuk status "Sebagian Dibayar"');
                 }
             };
         }
 
-        return array_merge(['numeric', 'min:0'], $rules);
+        return $rules;
+    }
+
+    /**
+     * Get remaining amount for partial payment
+     */
+    public static function getRemainingAmount(Get $get): float
+    {
+        $totalAmount = self::toFloat($get('total_amount') ?? 0);
+        $paidAmount = self::toFloat($get('paid_amount') ?? 0);
+
+        return max(0, $totalAmount - $paidAmount);
+    }
+
+    /**
+     * Get payment status helper text
+     */
+    public static function getPaymentStatusHelperText(Get $get): ?string
+    {
+        $paymentStatus = $get('payment_status');
+        $totalAmount = self::toFloat($get('total_amount') ?? 0);
+        $paidAmount = self::toFloat($get('paid_amount') ?? 0);
+
+        if ($paymentStatus === 'partial' && $paidAmount > 0) {
+            $remaining = self::getRemainingAmount($get);
+            return 'Sisa pembayaran: Rp ' . number_format($remaining, 0, ',', '.');
+        }
+
+        if ($paymentStatus === 'paid' && $totalAmount > 0) {
+            return 'Total pembayaran: Rp ' . number_format($totalAmount, 0, ',', '.');
+        }
+
+        return null;
     }
 }

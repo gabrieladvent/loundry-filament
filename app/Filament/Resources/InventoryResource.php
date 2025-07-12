@@ -26,6 +26,8 @@ class InventoryResource extends Resource
 
     protected static ?string $navigationGroup = 'Master Data';
 
+    protected static bool $shouldRegisterNavigation = false;
+
     public static function form(Form $form): Form
     {
         return $form
